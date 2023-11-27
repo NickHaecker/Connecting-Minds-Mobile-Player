@@ -11,7 +11,12 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },
+  "workspaces": [
+    "src/extensions",
+    "src/extensions/athaeck-websocket-vue3-extension"
+  ],
   "dependencies": {
+    "mitt": "^3.0.1",
     "pinia": "^2.1.7",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5"
