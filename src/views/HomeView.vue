@@ -3,7 +3,13 @@ import TheWelcome from '../components/TheWelcome.vue'
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <div id="app"> 
+    <header>
+      <h1>Mobile Player</h1>
+    </header>
+    <main>
+      <p><Welcome to Connecting Minds/>
+    </main>
+  </div>
+  
 </template>
