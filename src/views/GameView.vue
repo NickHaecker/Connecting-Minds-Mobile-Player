@@ -10,6 +10,7 @@
        <section class="game-controls">
           <button @click="()=>showItems = !showItems" class="control-button">Items</button> 
           <button @click="()=>showPosition = !showPosition" class="control-button">Positions</button> 
+        
         </section>
         <div class="item-list" v-if="showItems">
          
@@ -25,11 +26,8 @@
           </ul> -->
         </div>
         <div class="position" v-if="showPosition"> 
-          <h5>Position 1</h5>
-          <h5>Position 2</h5>
-          <h5>Position 3</h5>
           <ul>
-            <li @click="selectedPosition(position)" v-for="position in position" :key="item.Name">{{ item.Name }}</li>
+            <li @click="SelectedPosition(position)" v-for="position in positions" :key="position.ID">{{ position.Name }}</li>
           </ul>
         </div>
       </section>
@@ -50,9 +48,9 @@ const itemList = ref({Name:"KeyCard", Description:"KeyCard, um Tür aufzuschlie�
  
 
 const positions = ref([
-  { id: 1, name: 'Position 1' },
-  { id: 2, name: 'Position 2' },
-  { id: 3, name: 'Position 3' },
+  { ID: 1, Name: 'Position 1' },
+  { ID: 2, Name: 'Position 2' },
+  { ID: 3, Name: 'Position 3' },
 ]);
 
 const selectedPosition = ref(null);
@@ -61,28 +59,34 @@ const showPosition = ref(false)
 
 onBeforeMount(() => {
   const GetItems = new SendEvent("GET_ITEMS") 
+  const GetPositions = new SendEvent("GET_POSITIONS")
   bus.on("TAKE_MESSAGE",(body:any)=>{
     const data = <SendEvent>body
     if(data.eventName === "ON_GET_ITEMS"){
-      console.log(data.data)
       itemList.value = data.data.Items;
-      console.log(itemList.value);
-
     }
+
+    if(data.eventName === "ON_GET_POSITIONS"){
+      positions.value = data.data.Positions;
+    }
+
     if(data.eventName === "ON_PLACE_ITEM"){
       console.log(data.data)
       handleItemPlacement(data.data);
     }
+
     if (data.eventName === "ON_REMOVE_ITEM") {
       console.log(data.data);
       // Logik zum Entfernen des Items einfügen
       handleItemRemoval(data.data);
     }
   });
+  
   socketStore.SendEvent(GetItems)
+  socketStore.SendEvent(GetPositions)
 
-  const itemListVisible = ref(false);
 
+}),
 function toggleItemList() {
   // Hier wird der Zustand itemListVisible umgekehrt
   itemListVisible.value = !itemListVisible.value;
@@ -90,8 +94,14 @@ function toggleItemList() {
 function Select(){
   showItems.value = !showItems.value
 }
+function PlaceItem (item){
+  console.log(`Item wurde platziert: ${item.Name}`);
+}
 
-}),
+function SelectedPosition (position){
+  console.log(`Position wurde ausgewählt: ${position.Name}`);
+}
+
 function handleItemPlacement(item) {
   //Logik zum Platzieren des Items implementieren
   console.log(`Item wurde platziert: ${item.Name}`);
@@ -169,6 +179,13 @@ header {
 }
 
 .item-list {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.position {
   background-color: rgba(0, 0, 0, 0.5);
   padding: 15px;
   border-radius: 10px;
