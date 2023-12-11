@@ -1,6 +1,6 @@
 
 <template>
-  <div id="app">
+  <div id="GameView">
     <main>
       <section class="game-container">
         <div class="game-info">
@@ -143,14 +143,23 @@ function OnTakeMesage(body:any){
 
 </script>
 
-<style>
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: url('@/assets/ai_neural.jpg') center/cover no-repeat;
-  color: #ffffff;
+<style scoped>
+
+#GameView {
+display: grid; 
+grid-template-columns: repeat(2, auto);
+grid-gap: 10px;
+margin-bottom: 50px; 
+background-color: transparent;
+padding: 110px;
+margin: 0px;
+}
+
+header, nav, section, footer {
+  margin-bottom: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 10px; /* Optional: Abgerundete Ecken */
 }
 
 header {
@@ -158,10 +167,30 @@ header {
   padding: 20px;
 }
 
+/* Transparenz für Tasten und Abschnitte */
+header,
+.game-info,
+.game-controls,
+.item-list,
+.position {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+}
+
+
+
 .game-container {
-  display: flex;
+  max-width: 800px; /* Erweitere die Breite für mehr Raum im galaktischen Design */
   flex-direction: column;
   align-items: center;
+  max-width: 600px;
+  width: 100%;
+  background-color: rgba(12, 12, 12, 0.8); /* Transparenter Hintergrund für den Container */
+  backdrop-filter: blur(10px); /* Hinzufügen von Unschärfe für ein futuristisches Gefühl */
+  background-color: transparent;
+  position: relative; /* Positionierung für absolute Elemente innerhalb des Containers */
 }
 
 .game-info {
@@ -169,6 +198,15 @@ header {
   padding: 10px;
   border-radius: 10px;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-around;
+  backdrop-filter: blur(5px); /* Weitere Unschärfe für den Infobereich */
+}
+
+.info-item {
+  margin: 0;
+  font-size: 18px; /* Größere Schrift für Spielinformationen */
+  color: #33aaff; /* Hervorhebung der Textfarbe */
 }
 
 .game-board {
@@ -176,6 +214,30 @@ header {
   padding: 20px;
   border-radius: 15px;
   
+}
+
+.game-controls {
+display: grid; 
+grid-template-columns: repeat(2, auto);
+grid-gap: 10px;
+margin-bottom: 50px; 
+background-color: transparent;
+}
+
+.control-button {
+  background-color:#3d898d(51, 170, 255, 0.8); /* Hervorhebung mit Transparenz */
+  background-color: #3d898d;
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
+}
+
+.control-button:hover {
+  background-color: #85ebd9;
 }
 
 .item-list {
@@ -192,6 +254,43 @@ header {
   margin-top: 20px;
 }
 
+.item-list,
+.position {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.item-list ul,
+.position ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item-list li,
+.position li {
+  margin-bottom: 15px; /* Mehr Abstand zwischen Listenpunkten */
+  margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #3d898d;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+}
+
+.item-list li:hover{
+  color: #3d898d;
+}
+.position li:hover {
+  background-color: #85ebd9;
+}
+
 .item-list h2 {
   margin-bottom: 10px;
 }
@@ -204,5 +303,17 @@ header {
 
 .item-list li {
   margin-bottom: 5px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 </style>

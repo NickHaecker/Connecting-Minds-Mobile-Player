@@ -19,11 +19,22 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-
+<div class="background"> 
   <RouterView />
+</div>
+  <footer>
+    <p>&copy; 2023 Mobile Player Website</p>
+  </footer>
+  
 </template>
 
-<style scoped>
+<style >
+.background {
+  font-family: 'Orbitron';
+  background: url('@/assets/ai_neural.jpg') no-repeat;
+  background-position: -950px -150px;
+}
+
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -59,6 +70,10 @@ nav a:first-of-type {
   border: 0;
 }
 
+#app {
+  padding: unset!important;
+}
+
 @media (min-width: 1024px) {
   header {
     display: flex;
@@ -84,5 +99,11 @@ nav a:first-of-type {
     padding: 1rem 0;
     margin-top: 1rem;
   }
+}.footer {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #1f1f1f;
 }
 </style>

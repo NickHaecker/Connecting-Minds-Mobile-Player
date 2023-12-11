@@ -20,44 +20,64 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="app"> 
-    <header>
-        <h1>Mobile Player</h1>
-    </header>
-    <main>
+  <div id="HomeView"> 
+    
+    <main class="content">
+      <section class="game-container">
+        <div class="header-section">
+          <h1>Welcome to Connecting Minds</h1>
+          <p>WATCHER</p>
+        </div>
       <section class="player-section">
         <div class="player-info">
-          <h2>Player Name</h2>
-
+          NAME
         </div>
         <div class="player-avatar">
           <img src="@/assets/avatar.png" alt="Avatar Icon">
         </div>
-      </section>
 
       <section class="game-controls">
         <button @click= "Start" class="control-button">Start</button> 
       </section>
-      <p>Welcome to Connecting Minds</p>
+     
+    </section>
+  </section>
     </main>
-    <footer>
-      <p>&copy; 2023 Mobile Player Website</p>
-    </footer>
+
   </div>
   </template>
 
-<style>
-body {
-  font-family: 'Orbitron';
-  margin: 0;
-  padding: 0;
-  box-sizing: border;
+<style scoped>
+
+.header-section h1 {
+  color: white;
+}
+
+.header-section p {
+  color: white;
+}
+
+#HomeView {
+
+padding: 110px;
+margin: 0px;
+
+}
+
+.game-container {
+  max-width: 800px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: url('@/assets/ai_neural.jpg') no-repeat;
-  background-position: -950px -150px;
-  text-align: center; 
+  max-width: 600px;
+  width: 100%;
+  background-color: transparent;
+  backdrop-filter: blur(10px);
+  background-color: transparent;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 header {
@@ -66,12 +86,16 @@ header {
   background-color: #1f1f1f;
 }
 
-header h1 {
-  margin: 0;
+main {
+ 
 }
 
-main {
-  padding: 40px;
+.footer {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #1f1f1f;
 }
 
 .custom-card {
@@ -102,9 +126,7 @@ main {
 
 .game-controls {
   display: flex;
-  flex-direction: column;
 }
-
 .content {
   display: flex;
   justify-content: space-between;
@@ -112,19 +134,34 @@ main {
 }
 
 .control-button {
-  font-family: 'Orbitron';
-  margin: 10px;
-  padding: 15px;
-  font-size: 16px;
+  background-color:#3d898d(51, 170, 255, 0.8); /* Hervorhebung mit Transparenz */
   background-color: #3d898d;
   color: #ffffff;
   border: none;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
 }
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 
 .control-button:hover {
   background-color: #85ebd9;
 }
+
+
+
 </style>
