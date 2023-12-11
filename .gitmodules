@@ -1,2 +1,5 @@
 [submodule "src/extensions"]
 	url = https://github.com/NickHaecker/athaeck-vue3-extensions.git
+[submodule "src/types/Connecting-Minds-Data-Types"]
+	path = src/types/Connecting-Minds-Data-Types
+	url = https://github.com/NickHaecker/Connecting-Minds-Data-Types.git
