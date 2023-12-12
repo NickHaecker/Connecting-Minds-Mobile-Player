@@ -8,12 +8,11 @@
           <p>Level: {{ score }}</p>
         </div>
        <section class="game-controls">
-          <button @click="()=>showItems = !showItems" class="control-button">Items</button> 
-          <button @click="()=>showPosition = !showPosition" class="control-button">Positions</button> 
-        
+          
+          <div class="button-outside" @click="showItems = !showItems"><span class="button-inside">Items</span></div>
+          <div class="button-outside" @click="showPosition=!showPosition"><span class="button-inside">Positions</span></div>
         </section>
         <div class="item-list" v-if="showItems">
-         
           <ul>
             <li @click="PlaceItem(item)" v-for="item in itemList" :key="item.Name">{{ item.Name }}</li>
           </ul>
@@ -222,18 +221,50 @@ grid-template-columns: repeat(2, auto);
 grid-gap: 10px;
 margin-bottom: 50px; 
 background-color: transparent;
+
 }
 
 .control-button {
-  background-color:#3d898d(51, 170, 255, 0.8); /* Hervorhebung mit Transparenz */
-  background-color: #3d898d;
+  
   color: #ffffff;
   border: none;
-  padding: 10px;
+  padding: 0px;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
+  background-image: url('@/assets/button_image.png'); /* Ersetze 'pfad/zum/deinem/bild.jpg' durch den Pfad zu deinem Bild */
+  background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
+  background-position: center; /* Hintergrundposition zentrieren */
+  background-color: transparent; /* Hintergrundfarbe auf transparent setzen */
+  
+}
+
+.button-outside{
+  justify-content: center;
+  align-items: center;
+  padding:20px;
+  background-image:url('@/assets/button_image.png');
+  background-position:center;
+  background-size: cover;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
+  background-position: center; /* Hintergrundposition zentrieren */
+  cursor: pointer;
+  width: 150px;
+ 
+  
+}
+.button-inside{
+  padding: 20px;
+  text-align:center;
+  color:white;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
+  background-position: center; /* Hintergrundposition zentrieren */
+  cursor: pointer;
+  width: 150px;
+ 
 }
 
 .control-button:hover {
@@ -248,22 +279,21 @@ background-color: transparent;
 }
 
 .position {
-  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
   padding: 15px;
-  border-radius: 10px;
   margin-top: 20px;
 }
 
 .item-list,
 .position {
-  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
   padding: 15px;
-  border-radius: 10px;
   margin-top: 20px;
 }
 
 .item-list ul,
 .position ul {
+  align-items: center;
   list-style-type: none;
   padding: 0;
   margin: 0;
@@ -272,23 +302,22 @@ background-color: transparent;
 .item-list li,
 .position li {
   margin-bottom: 15px; /* Mehr Abstand zwischen Listenpunkten */
-  margin-bottom: 5px;
   padding: 10px;
-  border-radius: 5px;
-  background-color: #3d898d;
-  cursor: pointer;
   transition: background-color 0.3s ease;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 18px;
+  color: white;
+  border-radius: 10px;
 }
 
 .item-list li:hover{
   color: #3d898d;
+  border-radius: 10px;
 }
 .position li:hover {
-  background-color: #85ebd9;
+  background-color: #3d898d;
 }
 
 .item-list h2 {

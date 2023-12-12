@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { SendEvent } from '@/extensions/athaeck-websocket-vue3-extension/helper/types';
 import { useWebSocketStore } from '@/extensions/athaeck-websocket-vue3-extension/stores/webSocket';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const socketStore = useWebSocketStore() 
@@ -15,6 +15,11 @@ function Start (){
 }
 onMounted(() => {
   socketStore.Connect()
+
+
+  const showdialog = ref(true)
+
+
 })
 
 </script>
@@ -38,13 +43,54 @@ onMounted(() => {
 
       <section class="game-controls">
         <button @click= "Start" class="control-button">Start</button> 
+        <button @click= "Info" class="info-button">Info</button> 
       </section>
      
     </section>
   </section>
-    </main>
+  </main>
+  
+  <v-row justify="center">
+    <v-dialog
+      v-model="showdialog"
+      persistent
+      width="auto"
+    >
+      <template v-slot:activator="{ props }">
+        <v-btn
+          color="primary"
+          v-bind="props"
+        >
+          Open Dialog
+        </v-btn>
+      </template>
+      <v-card>
+        <v-card-title class="text-h5">
+          Use Google's location service?
+        </v-card-title>
+        <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="green-darken-1"
+            variant="text"
+            @click="showdialog = false"
+          >
+            Disagree
+          </v-btn>
+          <v-btn
+            color="green-darken-1"
+            variant="text"
+            @click="showdialog = false"
+          >
+            Agree
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-row>
+ </div>
 
-  </div>
   </template>
 
 <style scoped>
@@ -125,7 +171,12 @@ main {
 }
 
 .game-controls {
-  display: flex;
+  
+  display: grid; 
+  grid-template-columns: repeat(2, auto);
+  grid-gap: 10px;
+  margin-bottom: 50px; 
+  background-color: transparent;
 }
 .content {
   display: flex;
@@ -134,15 +185,34 @@ main {
 }
 
 .control-button {
-  background-color:#3d898d(51, 170, 255, 0.8); /* Hervorhebung mit Transparenz */
-  background-color: #3d898d;
+  
   color: #ffffff;
-  border: none;
   padding: 10px 20px;
-  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */ 
+  background-image: url('@/assets/button_image.png'); /* Ersetze 'pfad/zum/deinem/bild.jpg' durch den Pfad zu deinem Bild */
+  background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
+  background-position: center; /* Hintergrundposition zentrieren */
+  height: 150px;
+  width: 150px;
+  color: #fff; /* Textfarbe des Buttons, um Lesbarkeit sicherzustellen */
+  cursor: pointer; /* Ändert den Cursor, wenn er über dem Button liegt */
+  /* Weitere Stilisierungen nach Bedarf */
+}
+
+.info-button {
+  color: #ffffff;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */ 
+  background-image: url('@/assets/button_image.png'); /* Ersetze 'pfad/zum/deinem/bild.jpg' durch den Pfad zu deinem Bild */
+  background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
+  background-position: center; /* Hintergrundposition zentrieren */
+  height: 150px;
+  width: 150px;
+  
 }
 
 @keyframes pulse {
@@ -159,7 +229,7 @@ main {
 
 
 .control-button:hover {
-  background-color: #85ebd9;
+ 
 }
 
 
