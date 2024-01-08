@@ -9,18 +9,21 @@ const socketStore = useWebSocketStore()
 const router = useRouter()
 function Start (){ 
   const connectPlayerTwo: SendEvent = new SendEvent('CONNECT_PLAYER_TWO')
-  
   socketStore.SendEvent(connectPlayerTwo)
   router.push({name:"game"})
-}
+}  
+
+const showdialog = ref(true)
+
 onMounted(() => {
   socketStore.Connect()
 
-
-  const showdialog = ref(true)
-
-
 })
+
+function joinSession() {
+  const joinSessionEvent: SendEvent = new SendEvent('JOIN_SESSION') 
+  socketStore.SendEvent(joinSessionEvent);
+}
 
 </script>
 
@@ -43,12 +46,13 @@ onMounted(() => {
 
       <section class="game-controls">
         <button @click= "Start" class="control-button">Start</button> 
-        <button @click= "Info" class="info-button">Info</button> 
+        
       </section>
      
     </section>
   </section>
   </main>
+  
   
   <v-row justify="center">
     <v-dialog
@@ -57,29 +61,34 @@ onMounted(() => {
       width="auto"
     >
       <template v-slot:activator="{ props }">
-        <v-btn
-          color="primary"
+        <button
+          
           v-bind="props"
+          class="control-button"
         >
           Open Dialog
-        </v-btn>
+      </button>
       </template>
-      <v-card>
+      <v-card class="custom-card">
         <v-card-title class="text-h5">
           Use Google's location service?
         </v-card-title>
         <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+        <div class="dialog-actions">
+          <button class="disagree-button"></button>
+          <button class="agree-button"></button> 
+        </div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            color="green-darken-1"
+            color="white"
             variant="text"
             @click="showdialog = false"
           >
             Disagree
           </v-btn>
           <v-btn
-            color="green-darken-1"
+            color="white"
             variant="text"
             @click="showdialog = false"
           >
@@ -126,14 +135,12 @@ margin: 0px;
   position: relative;
 }
 
+
+
 header {
   padding: 20px;
   border-radius: 10px;
   background-color: #1f1f1f;
-}
-
-main {
- 
 }
 
 .footer {
@@ -146,9 +153,31 @@ main {
 
 .custom-card {
   background-color: #3d898d;
-  color: #ffffff;
+
 }
 
+.custom-card {
+  background-color: transparent; /* Hintergrundfarbe anpassen */
+  color: white; /* Schriftfarbe anpassen */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-dialog-btn {
+  /* Benutzerdefinierte Styles für den Button */
+  /* z.B., Hintergrundfarbe ändern: */
+  color: #fff;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  animation: pulse 5s infinite;
+  background-image: url('@/assets/button_image.png');
+  background-size: cover;
+  background-position: center;
+  height: 200px;
+  width: 200px;
+  
+}
 
 .player-section {
   display: flex;
@@ -201,19 +230,31 @@ main {
   /* Weitere Stilisierungen nach Bedarf */
 }
 
-.info-button {
-  color: #ffffff;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */ 
-  background-image: url('@/assets/button_image.png'); /* Ersetze 'pfad/zum/deinem/bild.jpg' durch den Pfad zu deinem Bild */
-  background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
-  background-position: center; /* Hintergrundposition zentrieren */
-  height: 150px;
-  width: 150px;
-  
+
+.text-h5{
+color: orange; 
 }
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.disagree-button,
+.agree-button {
+  
+  color: white!important;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.disagree-button:hover,
+.agree-button:hover {
+  color: white;
+}
+
 
 @keyframes pulse {
   0% {
