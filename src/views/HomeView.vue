@@ -4,6 +4,8 @@ import { SendEvent } from '@/extensions/athaeck-websocket-vue3-extension/helper/
 import { useWebSocketStore } from '@/extensions/athaeck-websocket-vue3-extension/stores/webSocket';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import bus from '@/hooks';
+
 
 const socketStore = useWebSocketStore() 
 const router = useRouter()
@@ -17,13 +19,27 @@ const showdialog = ref(true)
 
 onMounted(() => {
   socketStore.Connect()
+  bus.on("TAKE_MESSAGE", (body: any) => {
+    const data = <SendEvent>body;
+    if (data.eventName === "ON_JOIN_SESSION") {
+      router.push({name:"game"})
 
-})
+    } else if (data.eventName === "SESSION_NOT_FOUND") {
+      router.push({ name: "game" });
+    }
+  });
+});
 
 function joinSession() {
   const joinSessionEvent: SendEvent = new SendEvent('JOIN_SESSION') 
   socketStore.SendEvent(joinSessionEvent);
 }
+
+function SESSION_NOT_FOUND() {
+  const SessionnotfoundEvent: SendEvent = new SendEvent('SESSION_NOT_FOUND') 
+  socketStore.SendEvent(SessionnotfoundEvent);
+}
+
 
 </script>
 

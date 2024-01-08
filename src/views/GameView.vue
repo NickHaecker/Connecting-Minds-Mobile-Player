@@ -11,7 +11,10 @@
           
           <div class="button-outside" @click="showItems = !showItems"><span class="button-inside">Items</span></div>
           <div class="button-outside" @click="showPosition=!showPosition"><span class="button-inside">Positions</span></div>
+          
         </section>
+        <img src="@/assets/Map.png" alt="Map" class=" game-map">
+
         <div class="item-list" v-if="showItems">
           <ul>
             <li @click="PlaceItem(item)" v-for="item in itemList" :key="item.Name">{{ item.Name }}</li>
@@ -190,13 +193,14 @@ header,
   backdrop-filter: blur(10px); /* Hinzufügen von Unschärfe für ein futuristisches Gefühl */
   background-color: transparent;
   position: relative; /* Positionierung für absolute Elemente innerhalb des Containers */
+  margin-top: -100px;
 }
 
 .game-info {
   background-color: rgba(0, 0, 0, 0.5);
   padding: 10px;
   border-radius: 10px;
-  margin-bottom: 20px;
+  margin-top: -20px;
   display: flex;
   justify-content: space-around;
   backdrop-filter: blur(5px); /* Weitere Unschärfe für den Infobereich */
@@ -219,9 +223,16 @@ header,
 display: grid; 
 grid-template-columns: repeat(2, auto);
 grid-gap: 10px;
-margin-bottom: 50px; 
+margin-top: -20px; 
 background-color: transparent;
+justify-content: center;
 
+}
+
+.game-map {
+  margin-top: -30px; /* Füge einen oberen Abstand zum Bild hinzu */
+  width: 100%; /* Setze die Breite auf 100% */
+  height: auto; /* Automatische Anpassung der Höhe entsprechend der Breite */
 }
 
 .control-button {
@@ -237,7 +248,7 @@ background-color: transparent;
   background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
   background-position: center; /* Hintergrundposition zentrieren */
   background-color: transparent; /* Hintergrundfarbe auf transparent setzen */
-  
+  margin-top: -50px;
 }
 
 .button-outside{
