@@ -8,34 +8,38 @@
             <v-select v-model="selectedItem" label="Gegenstand auswählen" :items="getAvailableItems"></v-select>
           </div>
           <div class="position-select">
-            <v-select v-model="selectedPosition" :disabled="selectedItem === null" label="Position auswählen" :items="getAvailablePositions"></v-select>
+            <v-select v-model="selectedPosition" :disabled="selectedItem === null" label="Position auswählen"
+              :items="getAvailablePositions"></v-select>
           </div>
           <div class="action-bar">
             <div class="place">
-              <button :disabled="selectedItem === null && selectedPosition == null" @click="placeItem" class="control-button">Gegenstand platzieren</button>
+              <button :disabled="selectedItem === null && selectedPosition == null" @click="placeItem"
+                class="control-button">Gegenstand platzieren</button>
             </div>
             <div class="discard">
-              <button :disabled="!selectedItem || !selectedPosition" @click="discardSelection" class="control-button">Auswahl löschen</button>
+              <button :disabled="!selectedItem || !selectedPosition" @click="discardSelection"
+                class="control-button">Auswahl löschen</button>
             </div>
           </div>
         </div>
         <div class="listing-part">
           <span style="">Platzierte Gegenstände:</span>
-          <div v-for="item in getPlacedItems" :key="item.Item.Name" class="list-item">
-            <div class="inner-item">
-              <div class="item-name"><span> {{item.Item.Name}}</span></div>
-              <div class="remove-item">
-                <!-- <v-icon color="white" size="36">mdi-delete</v-icon>
-                 -->
-                 <span @click="removeItem(item)"><strong style="cursor: pointer;font-size: 18px;">X</strong></span>
-                 
+          <div class="list-part">
+            <div v-for="item in getPlacedItems" :key="item.Item.Name" class="list-item">
+              <div class="inner-item">
+                <div class="item-name" @click="scrollToMap(item)"
+                  title="Siehe im Slider an, in welchem Levelabschnitt der Gegenstand platziert wurde."><span> {{
+                    item.Item.Name }}</span></div>
+                <div class="remove-item">
+                  <span @click="removeItem(item)"><strong style="cursor: pointer;font-size: 18px;">X</strong></span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="map-part">
-        <v-carousel>
+        <v-carousel ref="carousel" hide-delimiters v-model="currentIndex">
           <v-carousel-item v-for="(item, i) in getMapImages" :key="i" :src="item.src" cover></v-carousel-item>
         </v-carousel>
       </div>
@@ -61,69 +65,115 @@ const notificationStore = useNotificationStore()
 
 const selectedItem = ref(null)
 const selectedPosition = ref(null);
-
+const currentIndex = ref(0)
 
 const getMapImages = computed(() => {
-  // return sessionID.value.length > 0
-  // const paths:Path[] = se
-  return [{ src: "https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg" }]
-})
-const getAvailableItems = computed(()=>{
-  return clientStore.SessionData?.AvailableItems.map((item:Item) => item.Name) || [];
-})
-const getAvailablePositions = computed(()=>{
 
-  return clientStore.SessionData?.AvailablePositions.map((item:Position) => item.Name,
+  const result = [];
+  const images = [{
+    id: "Path1",
+    src: "https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg", 
+    positions: []
+  }, {
+    id: "Overview",
+    src: "https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg", 
+    positions: []
+  }, {
+    id: "Start",
+    src: "src/assets/map/FullMap.png",
+     positions: [
+      "Keycardreader"
+    ]
+  }]
+
+  for (const image of images) {
+    if (image.id === "Overview" || image.id === "Start") {
+      result.push(image)
+    }
+  }
+  if (clientStore.SessionData !== null) {
+    for (const path of clientStore.SessionData.UnlockedPaths) {
+      for (const image of images) {
+        if (image.id === path.Name) {
+          result.push(image)
+        }
+      }
+    }
+  }
+
+  return result
+})
+const getAvailableItems = computed(() => {
+  return clientStore.SessionData?.AvailableItems.map((item: Item) => item.Name) || [];
+})
+const getAvailablePositions = computed(() => {
+
+  return clientStore.SessionData?.AvailablePositions.map((item: Position) => item.Name,
   ) || [];
 })
-const getPlacedItems = computed(()=>{
+const getPlacedItems = computed(() => {
   return clientStore.SessionData?.PlacedItems
 })
 
-function discardSelection():void{
+function discardSelection(): void {
   selectedItem.value = null
   selectedPosition.value = null
 }
-function placeItem(): void{
+function placeItem(): void {
 
-  if(!clientStore.SessionData?.ContainsPlayer){
+  if (!clientStore.SessionData?.ContainsPlayer) {
     notificationStore.SpawnNotification({
       type: "info",
-        message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände platzieren.",
-        action1: { label: "" }
+      message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände platzieren.",
+      action1: { label: "" }
     })
     return;
   }
 
-  const position: Position | null = clientStore.SessionData.AvailablePositions.find((item)=> item.Name === selectedPosition.value) || null
+  const position: Position | null = clientStore.SessionData.AvailablePositions.find((item) => item.Name === selectedPosition.value) || null
 
-  const item:Item| null = clientStore.SessionData.AvailableItems.find((position)=>position.Name === selectedItem.value) || null
+  const item: Item | null = clientStore.SessionData.AvailableItems.find((position) => position.Name === selectedItem.value) || null
 
-  if(position !== null && item !== null){
-    const placeItem:PlacedItem={
-      Item:item,
-      Position:position
+  if (position !== null && item !== null) {
+    const placeItem: PlacedItem = {
+      Item: item,
+      Position: position
     }
-    const placeItemEvent:SendEvent = new SendEvent(ConnectingMindsEvents.PLACE_ITEM)
-    placeItemEvent.addData("PlacedItem",placeItem)
+    const placeItemEvent: SendEvent = new SendEvent(ConnectingMindsEvents.PLACE_ITEM)
+    placeItemEvent.addData("PlacedItem", placeItem)
 
     socketStore.SendEvent(placeItemEvent)
     discardSelection()
   }
 }
-function removeItem(item:PlacedItem): void{
-  if(!clientStore.SessionData?.ContainsPlayer){
+function removeItem(item: PlacedItem): void {
+  if (!clientStore.SessionData?.ContainsPlayer) {
     notificationStore.SpawnNotification({
       type: "info",
-        message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände entfernen.",
-        action1: { label: "" }
+      message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände entfernen.",
+      action1: { label: "" }
     })
     return;
   }
-  const removeItemEvent:SendEvent = new SendEvent(ConnectingMindsEvents.REMOVE_ITEM)
-  removeItemEvent.addData("PlacedItem",item)
+  const removeItemEvent: SendEvent = new SendEvent(ConnectingMindsEvents.REMOVE_ITEM)
+  removeItemEvent.addData("PlacedItem", item)
 
-    socketStore.SendEvent(removeItemEvent)
+  socketStore.SendEvent(removeItemEvent)
+}
+
+function scrollToMap(item: PlacedItem): void {
+  // const carousel = 
+  const images = getMapImages.value
+  let index:number = 0;
+  let i = 0
+  for(const image of images){
+    if(image.positions.includes(item.Position.Name)){
+      index = i
+    }
+    i++
+  }
+  // this.$refs.
+  currentIndex.value = index
 }
 
 onBeforeMount(() => {
@@ -150,7 +200,7 @@ onUnmounted(() => {
 
 <style scoped>
 #GameView {
-  padding:  2% 10%;
+  padding: 2% 10%;
 }
 
 .control-button {
@@ -165,48 +215,64 @@ onUnmounted(() => {
   background-size: cover;
   background-position: center;
 }
-.control-button:hover{
+
+.control-button:hover {
   background-image: url('@/assets/button_image.png');
   background-size: cover;
   background-position: center;
 }
-.list-item{
+
+.list-part {
+  overflow-y: auto;
+  height: 290px;
+}
+
+.list-item {
   width: 100%;
   /* height: 40px; */
 }
-.item-name{
+
+.item-name {
+  cursor: pointer;
   width: 90%;
 }
-.remove-item{
+
+.remove-item {
   /* float: right; */
   width: 10%;
 }
-.inner-item{
+
+.inner-item {
   display: flex;
   padding: 7px;
   border: 1px lightgray solid;
-  vertical-align:middle
+  vertical-align: middle
 }
-.action-bar{
+
+.action-bar {
   width: 100%;
   display: flex;
   justify-content: center;
   margin-top: 50px;
 }
+
 .control-button:disabled {
   filter: grayscale(100%) !important;
   animation: none;
   cursor: not-allowed;
 }
-.map-part{
+
+.map-part {
   margin-top: 100px;
 }
-.place{
+
+.place {
   display: flex;
   justify-content: center;
   width: 50%;
 }
-.discard{
+
+.discard {
   display: flex;
   justify-content: center;
   width: 50%;
@@ -229,7 +295,8 @@ onUnmounted(() => {
   width: 50%;
   padding: 0 14px;
 }
-.position-select{
+
+.position-select {
   margin-top: 28px;
 }
 
