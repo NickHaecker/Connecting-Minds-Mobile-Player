@@ -178,7 +178,7 @@ function scrollToMap(item: PlacedItem): void {
 
 onBeforeMount(() => {
   if (clientStore.SessionData === null) {
-    // router.push({name:"home"})
+    router.push({name:"home"})
   }
 
   bus.on("TAKE_MESSAGE", (body: any) => {
