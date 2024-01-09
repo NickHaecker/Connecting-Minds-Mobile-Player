@@ -13,11 +13,7 @@ import type { NotificationItem } from '@/extensions/notifications/types';
 const socketStore = useWebSocketStore()
 const notificationStore = useNotificationStore()
 const router = useRouter()
-// function Start (){ 
-//   const connectPlayerTwo: SendEvent = new SendEvent('CONNECT_PLAYER_TWO')
-//   socketStore.SendEvent(connectPlayerTwo)
-//   router.push({name:"game"})
-// }  
+
 
 const showdialog = ref(false)
 const sessionID = ref("")
@@ -31,14 +27,9 @@ onMounted(() => {
   bus.on("TAKE_MESSAGE", (body: any) => {
     const data:SendEvent = body as SendEvent;
 
-    if (data.eventName === ConnectingMindsEvents.SESSION_NOT_FOUND) {
-      // const notification: NotificationItem = {
-      //   type: "info",
-      //   message: data.data.Message,
-      //   action1: { label: "" }
-      // }
-      // notificationStore.SpawnNotification(notification)
-    }
+    // if (data.eventName === ConnectingMindsEvents.SESSION_NOT_FOUND) {
+
+    // }
     if (data.eventName === ConnectingMindsEvents.ON_JOIN_SESSION) {
       const notification: NotificationItem = {
         type: "info",
@@ -48,16 +39,14 @@ onMounted(() => {
       notificationStore.SpawnNotification(notification)
       
     }
-    // if (data.eventName === "ON_JOIN_SESSION") {
-    //   router.push({name:"game"})
 
-    // } else if (data.eventName === "SESSION_NOT_FOUND") {
-    //   router.push({ name: "game" });
-    // }
   });
 });
 
 function joinSession() {
+  if(sessionID.value.length === 0){
+    return;
+  }
   const joinSessionEvent: SendEvent = new SendEvent('JOIN_SESSION')
   joinSessionEvent.addData("SessionID", sessionID.value)
   joinSessionEvent.addData("Type","WATCHER")
