@@ -101,7 +101,6 @@ function SESSION_NOT_FOUND() {
   width: 100%;
   background-color: transparent;
   backdrop-filter: blur(10px);
-  background-color: transparent;
   border-radius: 10px;
   padding: 4% 20%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

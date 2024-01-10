@@ -39,8 +39,8 @@
         </div>
       </div>
       <div class="map-part">
-        <v-carousel ref="carousel" hide-delimiters v-model="currentIndex">
-          <v-carousel-item v-for="(item, i) in getMapImages" :key="i" :src="item.src" cover></v-carousel-item>
+        <v-carousel ref="carousel" hide-delimiters v-model="currentIndex" height="600px">
+          <v-carousel-item cover v-for="(item, i) in getMapImages" :key="i" :src="item.src"></v-carousel-item>
         </v-carousel>
       </div>
     </div>
@@ -231,7 +231,12 @@ onUnmounted(() => {
   width: 100%;
   /* height: 40px; */
 }
-
+.inset{
+  padding: 14px;
+    background-color: transparent;
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+}
 .item-name {
   cursor: pointer;
   width: 90%;
@@ -263,7 +268,8 @@ onUnmounted(() => {
 }
 
 .map-part {
-  margin-top: 100px;
+  margin-top: 70px;
+  padding: 28px;
 }
 
 .place {
