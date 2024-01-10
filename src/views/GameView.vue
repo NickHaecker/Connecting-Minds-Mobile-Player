@@ -71,18 +71,41 @@ const getMapImages = computed(() => {
 
   const result = [];
   const images = [{
-    id: "Path1",
-    src: "https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg", 
-    positions: []
-  }, {
     id: "Overview",
-    src: "https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg", 
+    src: "src/assets/map/Alllevels.PNG", 
     positions: []
   }, {
     id: "Start",
-    src: "src/assets/map/FullMap.png",
+    src: "src/assets/map/Level1.PNG",
      positions: [
       "Keycardreader"
+    ]
+  },
+  {
+    id:"Raum 2",
+    src:"src/assets/map/Level2.PNG",
+    positions:[
+      "EnergyCell Socket Left","EnergyCell Socket Right","EnergyCellSocket Middle 1"
+    ]
+  },{
+    id:"Dritter Raum bzw Flur",
+    src:"src/assets/map/Level3.PNG",
+    positions:[
+      "Capsule","EnergyCellSocket Middle 2"
+    ]
+  },
+  {
+    id:"Raum 4",
+    src:"src/assets/map/Level4.PNG",
+    positions:[
+      "EnergyCellSocket Right","Capsule","Capsule 2","KeycardReader","EnergyCellSocket Middle","EnergyCellSocket Left"
+    ]
+  },
+  {
+    id:"Raum Fuenf",
+    src:"src/assets/map/Level5.PNG",
+    positions:[
+      "PlanetOne","PlanetTwo"
     ]
   }]
 
