@@ -107,6 +107,12 @@ const getMapImages = computed(() => {
     positions:[
       "PlanetOne","PlanetTwo"
     ]
+  },
+  {
+    id:"Raum 6",
+    src:"src/assets/map/Level6.PNG",
+    positions:[
+    ]
   }]
 
   for (const image of images) {
