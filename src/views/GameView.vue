@@ -78,34 +78,34 @@ const getMapImages = computed(() => {
     id: "Start",
     src: "src/assets/map/Level1.PNG",
      positions: [
-      "Keycardreader"
+      "Kartenlesegerät"
     ]
   },
   {
     id:"Raum 2",
     src:"src/assets/map/Level2.PNG",
     positions:[
-      "EnergyCell Socket Left","EnergyCell Socket Right","EnergyCellSocket Middle 1"
+      "Raum 2 Energiezelle Links","Raum 2 Energiezelle Rechts","Raum 2 Energiezelle Mitte"
     ]
   },{
     id:"Dritter Raum bzw Flur",
     src:"src/assets/map/Level3.PNG",
     positions:[
-      "Capsule","EnergyCellSocket Middle 2"
+      "Bodenplatte vor der Tür","Sockel"
     ]
   },
   {
     id:"Raum 4",
     src:"src/assets/map/Level4.PNG",
     positions:[
-      "EnergyCellSocket Right","Capsule","Capsule 2","KeycardReader","EnergyCellSocket Middle","EnergyCellSocket Left"
+      "Raum 4 Energiezelle Rechts","Raum 4 Bodenplatte Links","Raum 4 Bodenplatte rechts","Bodenplatte neben der Tür","Raum 4 Energiezelle Mitte","Raum 4 Energiezelle Links"
     ]
   },
   {
     id:"Raum Fuenf",
     src:"src/assets/map/Level5.PNG",
     positions:[
-      "PlanetOne","PlanetTwo"
+      "Planet Links","Planet Rechts"
     ]
   },
   {
