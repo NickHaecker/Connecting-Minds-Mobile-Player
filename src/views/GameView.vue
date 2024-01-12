@@ -8,7 +8,7 @@
             <v-select v-model="selectedItem" label="Gegenstand auswählen" :items="getAvailableItems"></v-select>
           </div>
           <div class="position-select">
-            <v-select v-model="selectedPosition" :disabled="selectedItem === null" label="Position auswählen"
+            <v-select v-model="selectedPosition" label="Position auswählen"
               :items="getAvailablePositions"></v-select>
           </div>
           <div class="action-bar">
@@ -17,7 +17,7 @@
                 class="control-button">Gegenstand platzieren</button>
             </div>
             <div class="discard">
-              <button :disabled="!selectedItem || !selectedPosition" @click="discardSelection"
+              <button :disabled="selectedItem == null || selectedPosition == null" @click="discardSelection"
                 class="control-button">Auswahl löschen</button>
             </div>
           </div>
