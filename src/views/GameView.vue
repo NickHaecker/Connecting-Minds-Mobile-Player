@@ -5,19 +5,34 @@
       <div class="top-part">
         <div class="action-part">
           <div class="item-select">
-            <v-select v-model="selectedItem" label="Gegenstand auswählen" :items="getAvailableItems"></v-select>
+            <v-select v-model="selectedItem" label="Gegenstand auswählen" :items="getAvailableItems"
+              :item-props="itemProps">
+              <template v-slot:item="{ item, props }">
+                <div v-bind="props">
+                  <div class="item-container" :title="item.value.description">
+                    <div class="image-container">
+                      <img :src="MapImage(item.value.id)" class="item-image" />
+                    </div>
+                    <div class="select-item-name">
+                      <span class="name">
+                        {{ item.value.name }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </v-select>
           </div>
           <div class="position-select">
-            <v-select v-model="selectedPosition" label="Position auswählen"
-              :items="getAvailablePositions"></v-select>
+            <v-select v-model="selectedPosition" label="Position auswählen" :items="getAvailablePositions"></v-select>
           </div>
           <div class="action-bar">
             <div class="place">
-              <button :disabled="selectedItem === null && selectedPosition == null" @click="placeItem"
+              <button :disabled="selectedItem === null && selectedPosition === null" @click="placeItem"
                 class="control-button">Gegenstand platzieren</button>
             </div>
             <div class="discard">
-              <button :disabled="selectedItem == null || selectedPosition == null" @click="discardSelection"
+              <button :disabled="selectedItem === null || selectedPosition === null" @click="discardSelection"
                 class="control-button">Auswahl löschen</button>
             </div>
           </div>
@@ -29,7 +44,8 @@
               <div class="inner-item">
                 <div class="item-name" @click="scrollToMap(item)"
                   title="Siehe im Slider an, in welchem Levelabschnitt der Gegenstand platziert wurde."><span> {{
-                    item.Item.Name }}</span></div>
+                    item.Item.Name }}</span>
+                </div>
                 <div class="remove-item">
                   <span @click="removeItem(item)"><strong style="cursor: pointer;font-size: 18px;">X</strong></span>
                 </div>
@@ -62,56 +78,106 @@ const clientStore = useclientStore()
 const socketStore = useWebSocketStore()
 const notificationStore = useNotificationStore()
 
-
 const selectedItem = ref(null)
 const selectedPosition = ref(null);
 const currentIndex = ref(0)
+const itemSrcs = ref([
+  {
+    id: "globe-mars",
+    src: "src/assets/items/mars.png"
+  },
+  {
+    id: "terminal-room-4",
+    src: "src/assets/items/terminal.png"
+  }
+  , {
+    id: "schluesselkarte-room-1",
+    src: "src/assets/items/keycard.png"
+  }, {
+    id: "energiezelle-gelb",
+    src: "src/assets/items/gelb.png"
+  }, {
+    id: "energiezelle-rot",
+    src: "src/assets/items/rot.png"
+  }, {
+    id: "energiezelle-magenta",
+    src: "src/assets/items/magenta.png"
+  }, {
+    id: "energiezelle-gruen",
+    src: "src/assets/items/grün.png"
+  }, {
+    id: "energiezelle-cyan",
+    src: "src/assets/items/cyan.png"
+  }, {
+    id: "energiezelle-blau",
+    src: "src/assets/items/blau.png"
+  }, {
+    id: "globe-earth",
+    src: "src/assets/items/erde.png"
+  }, {
+    id: "box-2",
+    src: "src/assets/items/box.png"
+  }, {
+    id: "box-1",
+    src: "src/assets/items/box.png"
+  }
+])
 
+function MapImage(id: string): string | undefined {
+  return itemSrcs.value.find(item => item.id === id)?.src
+}
+function itemProps(item) {
+  return {
+    title: item.name,
+    description: item.description,
+    id: item.id
+  }
+}
 const getMapImages = computed(() => {
 
   const result = [];
   const images = [{
     id: "Overview",
-    src: "src/assets/map/Alllevels.PNG", 
+    src: "src/assets/map/Alllevels.PNG",
     positions: []
   }, {
     id: "Start",
     src: "src/assets/map/Level1.PNG",
-     positions: [
+    positions: [
       "Kartenlesegerät"
     ]
   },
   {
-    id:"Raum 2",
-    src:"src/assets/map/Level2.PNG",
-    positions:[
-      "Raum 2 Energiezelle Links","Raum 2 Energiezelle Rechts","Raum 2 Energiezelle Mitte"
+    id: "Raum 2",
+    src: "src/assets/map/Level2.PNG",
+    positions: [
+      "Raum 2 Energiezelle Links", "Raum 2 Energiezelle Rechts", "Raum 2 Energiezelle Mitte"
     ]
-  },{
-    id:"Dritter Raum bzw Flur",
-    src:"src/assets/map/Level3.PNG",
-    positions:[
-      "Bodenplatte vor der Tür","Sockel"
-    ]
-  },
-  {
-    id:"Raum 4",
-    src:"src/assets/map/Level4.PNG",
-    positions:[
-      "Raum 4 Energiezelle Rechts","Raum 4 Bodenplatte Links","Raum 4 Bodenplatte rechts","Bodenplatte neben der Tür","Raum 4 Energiezelle Mitte","Raum 4 Energiezelle Links"
+  }, {
+    id: "Dritter Raum bzw Flur",
+    src: "src/assets/map/Level3.PNG",
+    positions: [
+      "Bodenplatte vor der Tür", "Sockel"
     ]
   },
   {
-    id:"Raum Fuenf",
-    src:"src/assets/map/Level5.PNG",
-    positions:[
-      "Planet Links","Planet Rechts"
+    id: "Raum 4",
+    src: "src/assets/map/Level4.PNG",
+    positions: [
+      "Raum 4 Energiezelle Rechts", "Raum 4 Bodenplatte Links", "Raum 4 Bodenplatte rechts", "Bodenplatte neben der Tür", "Raum 4 Energiezelle Mitte", "Raum 4 Energiezelle Links"
     ]
   },
   {
-    id:"Raum 6",
-    src:"src/assets/map/Level6.PNG",
-    positions:[
+    id: "Raum Fuenf",
+    src: "src/assets/map/Level5.PNG",
+    positions: [
+      "Planet Links", "Planet Rechts"
+    ]
+  },
+  {
+    id: "Raum 6",
+    src: "src/assets/map/Level6.PNG",
+    positions: [
     ]
   }]
 
@@ -133,13 +199,19 @@ const getMapImages = computed(() => {
   return result
 })
 const getAvailableItems = computed(() => {
-  return clientStore.SessionData?.AvailableItems.map((item: Item) => item.Name) || [];
-})
+  return clientStore.SessionData?.AvailableItems
+    .map((item: Item) => ({
+      name: item.Name,
+      description: item.Description,
+      id: item.ID
+    })) || [];
+});
 const getAvailablePositions = computed(() => {
 
   return clientStore.SessionData?.AvailablePositions.map((item: Position) => item.Name,
   ) || [];
 })
+
 const getPlacedItems = computed(() => {
   return clientStore.SessionData?.PlacedItems
 })
@@ -159,9 +231,15 @@ function placeItem(): void {
     return;
   }
 
+
+  let i: string;
+  if (selectedItem.value !== null) {
+    i = selectedItem.value.id
+  }
+
   const position: Position | null = clientStore.SessionData.AvailablePositions.find((item) => item.Name === selectedPosition.value) || null
 
-  const item: Item | null = clientStore.SessionData.AvailableItems.find((position) => position.Name === selectedItem.value) || null
+  const item: Item | null = clientStore.SessionData.AvailableItems.find((item) => item.ID === i) || null
 
   if (position !== null && item !== null) {
     const placeItem: PlacedItem = {
@@ -191,28 +269,33 @@ function removeItem(item: PlacedItem): void {
 }
 
 function scrollToMap(item: PlacedItem): void {
-  // const carousel = 
   const images = getMapImages.value
-  let index:number = 0;
+  let index: number = 0;
   let i = 0
-  for(const image of images){
-    if(image.positions.includes(item.Position.Name)){
+  for (const image of images) {
+    if (image.positions.includes(item.Position.Name)) {
       index = i
     }
     i++
   }
-  // this.$refs.
   currentIndex.value = index
 }
 
 onBeforeMount(() => {
   if (clientStore.SessionData === null) {
-    router.push({name:"home"})
+    // router.push({ name: "home" })
   }
 
   bus.on("TAKE_MESSAGE", (body: any) => {
     const data = body as SendEvent
-
+    console.log(data)
+    if(data.eventName === ConnectingMindsEvents.SEND_MESSAGE){
+      notificationStore.SpawnNotification({
+      type: "info",
+      message: data.data.Message,
+      action1: { label: "" }
+    })
+    }
   });
 
 
@@ -223,11 +306,51 @@ onUnmounted(() => {
   }
   const leave: SendEvent = new SendEvent(ConnectingMindsEvents.LEAVE_SESSION)
   leave.addData("Type", "WATCHER")
-  socketStore.SendEvent(leave)
+  // socketStore.SendEvent(leave)
+
+  bus.off("TAKE_MESSAGE", (body: any) => {
+    // const data = body as SendEvent
+
+  });
 })
 </script>
 
 <style scoped>
+.item-container {
+  /* height: 150px; */
+  padding: 7px;
+  display: flex;
+  cursor: pointer;
+}
+
+.image-container::hover {
+  background-color: lightgray;
+}
+
+.image-container {
+  height: 100px;
+  /* height: auto;
+  max-height: 100px;
+  min-height: 100px; */
+  /* width: auto;
+   */
+   width:100px;
+  /* object-fit: contain; */
+}
+
+.item-image {
+  object-fit: cover;
+  width: 100%;
+}
+
+.select-item-name {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* text-align: center; */
+  margin: 0 auto;
+}
+
 #GameView {
   padding: 2% 10%;
 }
@@ -260,12 +383,14 @@ onUnmounted(() => {
   width: 100%;
   /* height: 40px; */
 }
-.inset{
+
+.inset {
   padding: 14px;
-    background-color: transparent;
+  background-color: transparent;
   backdrop-filter: blur(10px);
   border-radius: 10px;
 }
+
 .item-name {
   cursor: pointer;
   width: 90%;
