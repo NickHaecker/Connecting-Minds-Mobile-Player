@@ -3,7 +3,7 @@
 import { SendEvent } from '@/extensions/athaeck-websocket-vue3-extension/helper/types';
 import { useWebSocketStore } from '@/extensions/athaeck-websocket-vue3-extension/stores/webSocket';
 import { useNotificationStore } from "@/extensions/notifications/stores/index"
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import bus from '@/hooks';
 import { ConnectingMindsEvents } from '@/types/Connecting-Minds-Data-Types/types';
@@ -21,7 +21,9 @@ const sessionID = ref("")
 const sessionIdIsValid = computed(() => {
   return sessionID.value.length > 0
 })
-
+onUnmounted(()=>{
+  bus.off("TAKE_MESSAGE", (body: any) => {})
+})
 onMounted(() => {
 
   bus.on("TAKE_MESSAGE", (body: any) => {

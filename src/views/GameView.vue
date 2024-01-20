@@ -2,10 +2,20 @@
 <template>
   <div id="GameView">
     <div class="inset">
+      <div>
+        <VOnboardingWrapper ref="wrapper" :steps="steps" />
+        <div style="display: flex;justify-content: flex-end;">
+          <div style="width: 50px; height: 50px;">
+            <span style="font-size: 20px; cursor: pointer;" @click="ShowTutorial">
+              ?
+            </span>
+          </div>
+        </div>
+      </div>  
       <div class="top-part">
         <div class="action-part">
           <div class="item-select">
-            <v-select v-model="selectedItem" label="Gegenstand auswählen" :items="getAvailableItems"
+            <v-select v-model="selectedItem" id="select-item" label="Gegenstand auswählen" :items="getAvailableItems"
               :item-props="itemProps">
               <template v-slot:item="{ item, props }">
                 <div v-bind="props">
@@ -24,21 +34,23 @@
             </v-select>
           </div>
           <div class="position-select">
-            <v-select v-model="selectedPosition" label="Position auswählen" :items="getAvailablePositions"></v-select>
+            <v-select id="select-position" v-model="selectedPosition" label="Position auswählen"
+              :items="getAvailablePositions"></v-select>
           </div>
           <div class="action-bar">
             <div class="place">
-              <button :disabled="selectedItem === null && selectedPosition === null" @click="placeItem"
-                class="control-button">Gegenstand platzieren</button>
+              <button id="place-item"
+                :disabled="(selectedItem === null && selectedPosition === null) || (selectedItem === null && selectedPosition !== null) || selectedItem !== null && selectedPosition === null"
+                @click="placeItem" class="control-button">Gegenstand platzieren</button>
             </div>
             <div class="discard">
-              <button :disabled="selectedItem === null || selectedPosition === null" @click="discardSelection"
-                class="control-button">Auswahl löschen</button>
+              <button id="discard-selection" :disabled="selectedItem === null && selectedPosition === null"
+                @click="discardSelection" class="control-button">Auswahl löschen</button>
             </div>
           </div>
         </div>
         <div class="listing-part">
-          <span style="">Platzierte Gegenstände:</span>
+          <span id="placed-items">Platzierte Gegenstände:</span>
           <div class="list-part">
             <div v-for="item in getPlacedItems" :key="item.Item.Name" class="list-item">
               <div class="inner-item">
@@ -46,7 +58,7 @@
                   title="Siehe im Slider an, in welchem Levelabschnitt der Gegenstand platziert wurde."><span> {{
                     item.Item.Name }}</span>
                 </div>
-                <div class="remove-item">
+                <div id="remove-item" class="remove-item">
                   <span @click="removeItem(item)"><strong style="cursor: pointer;font-size: 18px;">X</strong></span>
                 </div>
               </div>
@@ -55,7 +67,7 @@
         </div>
       </div>
       <div class="map-part">
-        <v-carousel ref="carousel" hide-delimiters v-model="currentIndex" height="600px">
+        <v-carousel id="see-map" ref="carousel" hide-delimiters v-model="currentIndex" height="600px">
           <v-carousel-item cover v-for="(item, i) in getMapImages" :key="i" :src="item.src"></v-carousel-item>
         </v-carousel>
       </div>
@@ -67,8 +79,10 @@
 import { SendEvent } from '@/extensions/athaeck-websocket-vue3-extension/helper/types';
 import { useWebSocketStore } from '@/extensions/athaeck-websocket-vue3-extension/stores/webSocket';
 import { useNotificationStore } from '@/extensions/notifications/stores';
-import { ref, onBeforeMount, computed } from 'vue';
+import { ref, onBeforeMount, computed, onMounted } from 'vue';
 import bus from '@/hooks';
+import { VOnboardingWrapper, useVOnboarding } from 'v-onboarding'
+import 'v-onboarding/dist/style.css'
 import { useclientStore } from '@/stores/client';
 import router from '@/router';
 import { onUnmounted } from 'vue';
@@ -81,6 +95,39 @@ const notificationStore = useNotificationStore()
 const selectedItem = ref(null)
 const selectedPosition = ref(null);
 const currentIndex = ref(0)
+const wrapper = ref(null)
+const { start, goToStep, finish } = useVOnboarding(wrapper)
+const steps = ref([
+  {
+    attachTo: { element: "#select-item" },
+    content: { title: "Gegenstand auswählen", description: "Wähle hier Gegenstände aus, um mit deinem Partner die anstehenden Rätsel zu lösen." }
+  },
+  {
+    attachTo: { element: "#select-position" },
+    content: { title: "Position auswählen", description: "Wähle hier für deinen ausgewählten Gegenstand die Position aus, wo der Gegenstand platziert werden soll." }
+  },
+  {
+    attachTo: { element: "#place-item" },
+    content: { title: "Gegenstand platzieren", description: "Platziere den Gegenstand über diesen Button" }
+  },
+  {
+    attachTo: { element: "#discard-selection" },
+    content: { title: "Auswahl entfernen", description: "Lösche deine Auswahl über diesen Button." }
+  },
+  {
+    attachTo: { element: "#placed-items" },
+    content: { title: "Übersicht über alle platzierten Gegenstände", description: "Hier erhälst du eine Übersicht über alle platzierten Gegenstände. Klicke auf einen Listeneintrag um um Slider unten anzeigen zu können, wo du den Gegenstand platziert hast." }
+  },
+  {
+    attachTo: { element: "#remove-item" },
+    content: { title: "Platzierten Gegenstand entfernen", description: "Sobald ein Gegenstand platziert wurde, kannst du ihne über das X wieder entfernen." }
+  },
+  {
+    attachTo: { element: "#see-map" },
+    content: { title: "Levelkarten", description: "Über den Slider siehst du die einzelnen Level des Spiels. Nutze sie, um zu erkennen, wo dein Spielpartner ist und lotse ihn durch das Spiel." }
+  }
+])
+
 const itemSrcs = ref([
   {
     id: "globe-mars",
@@ -267,7 +314,9 @@ function removeItem(item: PlacedItem): void {
 
   socketStore.SendEvent(removeItemEvent)
 }
-
+function ShowTutorial(){
+  start()
+}
 function scrollToMap(item: PlacedItem): void {
   const images = getMapImages.value
   let index: number = 0;
@@ -280,21 +329,27 @@ function scrollToMap(item: PlacedItem): void {
   }
   currentIndex.value = index
 }
-
+onMounted(() => {
+  start()
+})
 onBeforeMount(() => {
   if (clientStore.SessionData === null) {
-    // router.push({ name: "home" })
+    router.push({ name: "home" })
   }
 
   bus.on("TAKE_MESSAGE", (body: any) => {
     const data = body as SendEvent
     console.log(data)
-    if(data.eventName === ConnectingMindsEvents.SEND_MESSAGE){
+    if (data.eventName === ConnectingMindsEvents.SEND_MESSAGE) {
       notificationStore.SpawnNotification({
-      type: "info",
-      message: data.data.Message,
-      action1: { label: "" }
-    })
+        type: "info",
+        message: data.data.Message,
+        action1: { label: "" }
+      })
+    }
+    if (data.eventName === ConnectingMindsEvents.ON_UNLOCK_PATH) {
+      const lastIndex: number = getMapImages.value.length - 1
+      currentIndex.value = lastIndex
     }
   });
 
@@ -306,10 +361,10 @@ onUnmounted(() => {
   }
   const leave: SendEvent = new SendEvent(ConnectingMindsEvents.LEAVE_SESSION)
   leave.addData("Type", "WATCHER")
-  // socketStore.SendEvent(leave)
+  socketStore.SendEvent(leave)
 
   bus.off("TAKE_MESSAGE", (body: any) => {
-    // const data = body as SendEvent
+
 
   });
 })
@@ -317,7 +372,7 @@ onUnmounted(() => {
 
 <style scoped>
 .item-container {
-  /* height: 150px; */
+
   padding: 7px;
   display: flex;
   cursor: pointer;
@@ -329,13 +384,7 @@ onUnmounted(() => {
 
 .image-container {
   height: 100px;
-  /* height: auto;
-  max-height: 100px;
-  min-height: 100px; */
-  /* width: auto;
-   */
-   width:100px;
-  /* object-fit: contain; */
+  width: 100px;
 }
 
 .item-image {
@@ -347,7 +396,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* text-align: center; */
   margin: 0 auto;
 }
 
@@ -397,7 +445,6 @@ onUnmounted(() => {
 }
 
 .remove-item {
-  /* float: right; */
   width: 10%;
 }
 
@@ -478,6 +525,16 @@ onUnmounted(() => {
 
   100% {
     transform: scale(1);
+  }
+}
+</style>
+<style>
+#GameView{
+  .v-onboarding-item__header-title{
+    color: black;
+  }
+  .v-onboarding-item__description{
+    color: black;
   }
 }
 </style>
