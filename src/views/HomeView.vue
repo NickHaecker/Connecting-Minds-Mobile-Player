@@ -59,10 +59,6 @@ function joinSession() {
   socketStore.SendEvent(joinSessionEvent);
 }
 
-function SESSION_NOT_FOUND() {
-  const SessionnotfoundEvent: SendEvent = new SendEvent('SESSION_NOT_FOUND')
-  socketStore.SendEvent(SessionnotfoundEvent);
-}
 
 
 </script>
