@@ -11,7 +11,7 @@
             </span>
           </div>
         </div>
-      </div>  
+      </div>
       <div class="top-part">
         <div class="action-part">
           <div class="item-select">
@@ -87,6 +87,7 @@ import { useclientStore } from '@/stores/client';
 import router from '@/router';
 import { onUnmounted } from 'vue';
 import { ConnectingMindsEvents, type Item, type Path, type PlacedItem, type Position } from '@/types/Connecting-Minds-Data-Types/types';
+import { onBeforeUnmount } from 'vue';
 
 const clientStore = useclientStore()
 const socketStore = useWebSocketStore()
@@ -130,36 +131,36 @@ const steps = ref([
 
 const itemSrcs = ref([
   {
-    id: "globe-mars",
+    id: "mars",
     src: "src/assets/items/mars.png"
   },
   {
-    id: "terminal-room-4",
+    id: "terminal",
     src: "src/assets/items/terminal.png"
   }
   , {
-    id: "schluesselkarte-room-1",
+    id: "keycard",
     src: "src/assets/items/keycard.png"
   }, {
-    id: "energiezelle-gelb",
+    id: "energy-cell-yellow",
     src: "src/assets/items/gelb.png"
   }, {
-    id: "energiezelle-rot",
+    id: "energy-cell-red",
     src: "src/assets/items/rot.png"
   }, {
-    id: "energiezelle-magenta",
+    id: "energy-cell-magenta",
     src: "src/assets/items/magenta.png"
   }, {
-    id: "energiezelle-gruen",
+    id: "energy-cell-green",
     src: "src/assets/items/grün.png"
   }, {
-    id: "energiezelle-cyan",
+    id: "energy-cell-cyan",
     src: "src/assets/items/cyan.png"
   }, {
-    id: "energiezelle-blau",
+    id: "energy-cell-blue",
     src: "src/assets/items/blau.png"
   }, {
-    id: "globe-earth",
+    id: "earth",
     src: "src/assets/items/erde.png"
   }, {
     id: "box-2",
@@ -314,7 +315,7 @@ function removeItem(item: PlacedItem): void {
 
   socketStore.SendEvent(removeItemEvent)
 }
-function ShowTutorial(){
+function ShowTutorial() {
   start()
 }
 function scrollToMap(item: PlacedItem): void {
@@ -355,6 +356,12 @@ onBeforeMount(() => {
 
 
 })
+onBeforeUnmount(() => {
+  bus.off("TAKE_MESSAGE", (body: any) => {
+
+
+  });
+})
 onUnmounted(() => {
   if (clientStore.SessionData === null) {
     return;
@@ -362,11 +369,6 @@ onUnmounted(() => {
   const leave: SendEvent = new SendEvent(ConnectingMindsEvents.LEAVE_SESSION)
   leave.addData("Type", "WATCHER")
   socketStore.SendEvent(leave)
-
-  bus.off("TAKE_MESSAGE", (body: any) => {
-
-
-  });
 })
 </script>
 
@@ -529,11 +531,12 @@ onUnmounted(() => {
 }
 </style>
 <style>
-#GameView{
-  .v-onboarding-item__header-title{
+#GameView {
+  .v-onboarding-item__header-title {
     color: black;
   }
-  .v-onboarding-item__description{
+
+  .v-onboarding-item__description {
     color: black;
   }
 }

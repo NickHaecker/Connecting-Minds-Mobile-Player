@@ -8,6 +8,7 @@ import { useRouter } from 'vue-router';
 import bus from '@/hooks';
 import { ConnectingMindsEvents } from '@/types/Connecting-Minds-Data-Types/types';
 import type { NotificationItem } from '@/extensions/notifications/types';
+import { onBeforeMount } from 'vue';
 
 
 const socketStore = useWebSocketStore()
@@ -21,37 +22,40 @@ const sessionID = ref("")
 const sessionIdIsValid = computed(() => {
   return sessionID.value.length > 0
 })
-onUnmounted(()=>{
-  bus.off("TAKE_MESSAGE", (body: any) => {})
+onUnmounted(() => {
+  bus.off("TAKE_MESSAGE", (body: any) => { })
 })
 onMounted(() => {
 
-  bus.on("TAKE_MESSAGE", (body: any) => {
-    const data:SendEvent = body as SendEvent;
 
+});
+onBeforeMount(() => {
+  bus.on("TAKE_MESSAGE", (body: any) => {
+    const data: SendEvent = body as SendEvent;
+    console.log(data)
     // if (data.eventName === ConnectingMindsEvents.SESSION_NOT_FOUND) {
 
     // }
-    if (data.eventName === ConnectingMindsEvents.ON_JOIN_SESSION) {
+    if (data.eventName === ConnectingMindsEvents.SESSION_NOT_FOUND) {
       const notification: NotificationItem = {
         type: "info",
-        message: data.data["Message"],
+        message: data.data["Messsage"],
         action1: { label: "" }
       }
       notificationStore.SpawnNotification(notification)
-      
+
     }
 
   });
-});
+})
 
 function joinSession() {
-  if(sessionID.value.length === 0){
+  if (sessionID.value.length === 0) {
     return;
   }
   const joinSessionEvent: SendEvent = new SendEvent('JOIN_SESSION')
   joinSessionEvent.addData("SessionID", sessionID.value)
-  joinSessionEvent.addData("Type","WATCHER")
+  joinSessionEvent.addData("Type", "WATCHER")
   socketStore.SendEvent(joinSessionEvent);
 }
 
