@@ -1,359 +1,543 @@
 
 <template>
   <div id="GameView">
-    <main>
-      <section class="game-container">
-        <div class="game-info">
-          <p>Score: {{ level }}</p>
-          <p>Level: {{ score }}</p>
+    <div class="inset">
+      <div>
+        <VOnboardingWrapper ref="wrapper" :steps="steps" />
+        <div style="display: flex;justify-content: flex-end;">
+          <div style="width: 50px; height: 50px;">
+            <span style="font-size: 20px; cursor: pointer;" @click="ShowTutorial">
+              ?
+            </span>
+          </div>
         </div>
-       <section class="game-controls">
-          
-          <div class="button-outside" @click="showItems = !showItems"><span class="button-inside">Items</span></div>
-          <div class="button-outside" @click="showPosition=!showPosition"><span class="button-inside">Positions</span></div>
-          
-        </section>
-        <img src="@/assets/Map.png" alt="Map" class=" game-map">
-
-        <div class="item-list" v-if="showItems">
-          <ul>
-            <li @click="PlaceItem(item)" v-for="item in itemList" :key="item.Name">{{ item.Name }}</li>
-          </ul>
-          <!-- <ul>
-            <li v-for="item in itemList" :key="item.Name">
-              {{ item.Name }}
-              <button @click="placeItem(item)">Platzieren</button>
-              <button @click="removeItem(item)">Entfernen</button>
-            </li>
-          </ul> -->
+      </div>
+      <div class="top-part">
+        <div class="action-part">
+          <div class="item-select">
+            <v-select v-model="selectedItem" id="select-item" label="Gegenstand auswählen" :items="getAvailableItems"
+              :item-props="itemProps">
+              <template v-slot:item="{ item, props }">
+                <div v-bind="props">
+                  <div class="item-container" :title="item.value.description">
+                    <div class="image-container">
+                      <img :src="MapImage(item.value.id)" class="item-image" />
+                    </div>
+                    <div class="select-item-name">
+                      <span class="name">
+                        {{ item.value.name }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </v-select>
+          </div>
+          <div class="position-select">
+            <v-select id="select-position" v-model="selectedPosition" label="Position auswählen"
+              :items="getAvailablePositions"></v-select>
+          </div>
+          <div class="action-bar">
+            <div class="place">
+              <button id="place-item"
+                :disabled="(selectedItem === null && selectedPosition === null) || (selectedItem === null && selectedPosition !== null) || selectedItem !== null && selectedPosition === null"
+                @click="placeItem" class="control-button">Gegenstand platzieren</button>
+            </div>
+            <div class="discard">
+              <button id="discard-selection" :disabled="selectedItem === null && selectedPosition === null"
+                @click="discardSelection" class="control-button">Auswahl löschen</button>
+            </div>
+          </div>
         </div>
-        <div class="position" v-if="showPosition"> 
-          <ul>
-            <li @click="SelectedPosition(position)" v-for="position in positions" :key="position.ID">{{ position.Name }}</li>
-          </ul>
+        <div class="listing-part">
+          <span id="placed-items">Platzierte Gegenstände:</span>
+          <div class="list-part">
+            <div v-for="item in getPlacedItems" :key="item.Item.Name" class="list-item">
+              <div class="inner-item">
+                <div class="item-name" @click="scrollToMap(item)"
+                  title="Siehe im Slider an, in welchem Levelabschnitt der Gegenstand platziert wurde."><span> {{
+                    item.Item.Name }}</span>
+                </div>
+                <div id="remove-item" class="remove-item">
+                  <span @click="removeItem(item)"><strong style="cursor: pointer;font-size: 18px;">X</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+      <div class="map-part">
+        <v-carousel id="see-map" ref="carousel" hide-delimiters v-model="currentIndex" height="600px">
+          <v-carousel-item cover v-for="(item, i) in getMapImages" :key="i" :src="item.src"></v-carousel-item>
+        </v-carousel>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { SendEvent } from '@/extensions/athaeck-websocket-vue3-extension/helper/types';
 import { useWebSocketStore } from '@/extensions/athaeck-websocket-vue3-extension/stores/webSocket';
-import { ref, onBeforeMount } from 'vue';
+import { useNotificationStore } from '@/extensions/notifications/stores';
+import { ref, onBeforeMount, computed, onMounted } from 'vue';
 import bus from '@/hooks';
-import { convertCompilerOptionsFromJson } from 'typescript';
-const socketStore = useWebSocketStore() 
+import { VOnboardingWrapper, useVOnboarding } from 'v-onboarding'
+import 'v-onboarding/dist/style.css'
+import { useclientStore } from '@/stores/client';
+import router from '@/router';
+import { onUnmounted } from 'vue';
+import { ConnectingMindsEvents, type Item, type Path, type PlacedItem, type Position } from '@/types/Connecting-Minds-Data-Types/types';
+import { onBeforeUnmount } from 'vue';
 
-//const onTakeMessageRef = ref<(body: any) => void>(OnTakeMessage);
-const itemList = ref({Name:"KeyCard", Description:"KeyCard, um Tür aufzuschließen"});
- 
+const clientStore = useclientStore()
+const socketStore = useWebSocketStore()
+const notificationStore = useNotificationStore()
 
-const positions = ref([
-  { ID: 1, Name: 'Position 1' },
-  { ID: 2, Name: 'Position 2' },
-  { ID: 3, Name: 'Position 3' },
-]);
-
+const selectedItem = ref(null)
 const selectedPosition = ref(null);
-const showItems = ref(false)
-const showPosition = ref(false)
+const currentIndex = ref(0)
+const wrapper = ref(null)
+const { start, goToStep, finish } = useVOnboarding(wrapper)
+const steps = ref([
+  {
+    attachTo: { element: "#select-item" },
+    content: { title: "Gegenstand auswählen", description: "Wähle hier Gegenstände aus, um mit deinem Partner die anstehenden Rätsel zu lösen." }
+  },
+  {
+    attachTo: { element: "#select-position" },
+    content: { title: "Position auswählen", description: "Wähle hier für deinen ausgewählten Gegenstand die Position aus, wo der Gegenstand platziert werden soll." }
+  },
+  {
+    attachTo: { element: "#place-item" },
+    content: { title: "Gegenstand platzieren", description: "Platziere den Gegenstand über diesen Button" }
+  },
+  {
+    attachTo: { element: "#discard-selection" },
+    content: { title: "Auswahl entfernen", description: "Lösche deine Auswahl über diesen Button." }
+  },
+  {
+    attachTo: { element: "#placed-items" },
+    content: { title: "Übersicht über alle platzierten Gegenstände", description: "Hier erhälst du eine Übersicht über alle platzierten Gegenstände. Klicke auf einen Listeneintrag um um Slider unten anzeigen zu können, wo du den Gegenstand platziert hast." }
+  },
+  {
+    attachTo: { element: "#remove-item" },
+    content: { title: "Platzierten Gegenstand entfernen", description: "Sobald ein Gegenstand platziert wurde, kannst du ihne über das X wieder entfernen." }
+  },
+  {
+    attachTo: { element: "#see-map" },
+    content: { title: "Levelkarten", description: "Über den Slider siehst du die einzelnen Level des Spiels. Nutze sie, um zu erkennen, wo dein Spielpartner ist und lotse ihn durch das Spiel." }
+  }
+])
 
+const itemSrcs = ref([
+  {
+    id: "mars",
+    src: "src/assets/items/mars.png"
+  },
+  {
+    id: "terminal",
+    src: "src/assets/items/terminal.png"
+  }
+  , {
+    id: "keycard",
+    src: "src/assets/items/keycard.png"
+  }, {
+    id: "energy-cell-yellow",
+    src: "src/assets/items/gelb.png"
+  }, {
+    id: "energy-cell-red",
+    src: "src/assets/items/rot.png"
+  }, {
+    id: "energy-cell-magenta",
+    src: "src/assets/items/magenta.png"
+  }, {
+    id: "energy-cell-green",
+    src: "src/assets/items/grün.png"
+  }, {
+    id: "energy-cell-cyan",
+    src: "src/assets/items/cyan.png"
+  }, {
+    id: "energy-cell-blue",
+    src: "src/assets/items/blau.png"
+  }, {
+    id: "earth",
+    src: "src/assets/items/erde.png"
+  }, {
+    id: "box-2",
+    src: "src/assets/items/box.png"
+  }, {
+    id: "box-1",
+    src: "src/assets/items/box.png"
+  }
+])
+
+function MapImage(id: string): string | undefined {
+  return itemSrcs.value.find(item => item.id === id)?.src
+}
+function itemProps(item) {
+  return {
+    title: item.name,
+    description: item.description,
+    id: item.id
+  }
+}
+const getMapImages = computed(() => {
+
+  const result = [];
+  const images = [{
+    id: "Overview",
+    src: "src/assets/map/Alllevels.PNG",
+    positions: []
+  }, {
+    id: "Start",
+    src: "src/assets/map/Level1.PNG",
+    positions: [
+      "Kartenlesegerät"
+    ]
+  },
+  {
+    id: "Raum 2",
+    src: "src/assets/map/Level2.PNG",
+    positions: [
+      "Raum 2 Energiezelle Links", "Raum 2 Energiezelle Rechts", "Raum 2 Energiezelle Mitte"
+    ]
+  }, {
+    id: "Dritter Raum bzw Flur",
+    src: "src/assets/map/Level3.PNG",
+    positions: [
+      "Bodenplatte vor der Tür", "Sockel"
+    ]
+  },
+  {
+    id: "Raum 4",
+    src: "src/assets/map/Level4.PNG",
+    positions: [
+      "Raum 4 Energiezelle Rechts", "Raum 4 Bodenplatte Links", "Raum 4 Bodenplatte rechts", "Bodenplatte neben der Tür", "Raum 4 Energiezelle Mitte", "Raum 4 Energiezelle Links"
+    ]
+  },
+  {
+    id: "Raum Fuenf",
+    src: "src/assets/map/Level5.PNG",
+    positions: [
+      "Planet Links", "Planet Rechts"
+    ]
+  },
+  {
+    id: "Raum 6",
+    src: "src/assets/map/Level6.PNG",
+    positions: [
+    ]
+  }]
+
+  for (const image of images) {
+    if (image.id === "Overview" || image.id === "Start") {
+      result.push(image)
+    }
+  }
+  if (clientStore.SessionData !== null) {
+    for (const path of clientStore.SessionData.UnlockedPaths) {
+      for (const image of images) {
+        if (image.id === path.Name) {
+          result.push(image)
+        }
+      }
+    }
+  }
+
+  return result
+})
+const getAvailableItems = computed(() => {
+  return clientStore.SessionData?.AvailableItems
+    .map((item: Item) => ({
+      name: item.Name,
+      description: item.Description,
+      id: item.ID
+    })) || [];
+});
+const getAvailablePositions = computed(() => {
+
+  return clientStore.SessionData?.AvailablePositions.map((item: Position) => item.Name,
+  ) || [];
+})
+
+const getPlacedItems = computed(() => {
+  return clientStore.SessionData?.PlacedItems
+})
+
+function discardSelection(): void {
+  selectedItem.value = null
+  selectedPosition.value = null
+}
+function placeItem(): void {
+
+  if (!clientStore.SessionData?.ContainsPlayer) {
+    notificationStore.SpawnNotification({
+      type: "info",
+      message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände platzieren.",
+      action1: { label: "" }
+    })
+    return;
+  }
+
+
+  let i: string;
+  if (selectedItem.value !== null) {
+    i = selectedItem.value.id
+  }
+
+  const position: Position | null = clientStore.SessionData.AvailablePositions.find((item) => item.Name === selectedPosition.value) || null
+
+  const item: Item | null = clientStore.SessionData.AvailableItems.find((item) => item.ID === i) || null
+
+  if (position !== null && item !== null) {
+    const placeItem: PlacedItem = {
+      Item: item,
+      Position: position
+    }
+    const placeItemEvent: SendEvent = new SendEvent(ConnectingMindsEvents.PLACE_ITEM)
+    placeItemEvent.addData("PlacedItem", placeItem)
+
+    socketStore.SendEvent(placeItemEvent)
+    discardSelection()
+  }
+}
+function removeItem(item: PlacedItem): void {
+  if (!clientStore.SessionData?.ContainsPlayer) {
+    notificationStore.SpawnNotification({
+      type: "info",
+      message: "Es ist kein Spieler in der Szene, du kannst derzeit keine Gegenstände entfernen.",
+      action1: { label: "" }
+    })
+    return;
+  }
+  const removeItemEvent: SendEvent = new SendEvent(ConnectingMindsEvents.REMOVE_ITEM)
+  removeItemEvent.addData("PlacedItem", item)
+
+  socketStore.SendEvent(removeItemEvent)
+}
+function ShowTutorial() {
+  start()
+}
+function scrollToMap(item: PlacedItem): void {
+  const images = getMapImages.value
+  let index: number = 0;
+  let i = 0
+  for (const image of images) {
+    if (image.positions.includes(item.Position.Name)) {
+      index = i
+    }
+    i++
+  }
+  currentIndex.value = index
+}
+onMounted(() => {
+  start()
+})
 onBeforeMount(() => {
-  const GetItems = new SendEvent("GET_ITEMS") 
-  const GetPositions = new SendEvent("GET_POSITIONS")
-  bus.on("TAKE_MESSAGE",(body:any)=>{
-    const data = <SendEvent>body
-    if(data.eventName === "ON_GET_ITEMS"){
-      itemList.value = data.data.Items;
-    }
+  if (clientStore.SessionData === null) {
+    router.push({ name: "home" })
+  }
 
-    if(data.eventName === "ON_GET_POSITIONS"){
-      positions.value = data.data.Positions;
+  bus.on("TAKE_MESSAGE", (body: any) => {
+    const data = body as SendEvent
+    console.log(data)
+    if (data.eventName === ConnectingMindsEvents.SEND_MESSAGE) {
+      notificationStore.SpawnNotification({
+        type: "info",
+        message: data.data.Message,
+        action1: { label: "" }
+      })
     }
-
-    if(data.eventName === "ON_PLACE_ITEM"){
-      console.log(data.data)
-      handleItemPlacement(data.data);
-    }
-
-    if (data.eventName === "ON_REMOVE_ITEM") {
-      console.log(data.data);
-      // Logik zum Entfernen des Items einfügen
-      handleItemRemoval(data.data);
+    if (data.eventName === ConnectingMindsEvents.ON_UNLOCK_PATH) {
+      const lastIndex: number = getMapImages.value.length - 1
+      currentIndex.value = lastIndex
     }
   });
-  
-  socketStore.SendEvent(GetItems)
-  socketStore.SendEvent(GetPositions)
 
 
-}),
-function toggleItemList() {
-  // Hier wird der Zustand itemListVisible umgekehrt
-  itemListVisible.value = !itemListVisible.value;
-}
-function Select(){
-  showItems.value = !showItems.value
-}
-function PlaceItem (item){
-  console.log(`Item wurde platziert: ${item.Name}`);
-}
+})
+onBeforeUnmount(() => {
+  bus.off("TAKE_MESSAGE", (body: any) => {
 
-function SelectedPosition (position){
-  console.log(`Position wurde ausgewählt: ${position.Name}`);
-}
 
-function handleItemPlacement(item) {
-  //Logik zum Platzieren des Items implementieren
-  console.log(`Item wurde platziert: ${item.Name}`);
-}
-function handleItemRemoval(item) {
-  //Logik zum Entfernen des Items implementieren
-  console.log(`Item wurde entfernt: ${item.Name}`);
-}
-
-// function PlaceItem(item){
-//   console.log(`Item wird platziert: ${item.Name}`);
-//   socketStore.SendEvent({
-// eventName: 'PLACE_ITEM_EVENT',
-// data: item,
-// JSONString: '',
-// addData: function (key: string, value: any): void {
-// throw new Error('Function not implemented.');
-// }
-// });
-// }
-
-// function RemoveItem(item) {
-//   //Funktion zum Entfernen des Items implementieren
-//   // Diese Funktion könnte dann bei einem Klick oder anderen Benutzerinteraktion aufgerufen werden
-//   console.log(`Item wird entfernt: ${item.Name}`);
-//   socketStore.SendEvent({
-// eventName: 'REMOVE_ITEM_EVENT',
-// data: item,
-// JSONString: '',
-// addData: function (key: string, value: any): void {
-// throw new Error('Function not implemented.');
-// }
-// });
-// }
-
-function OnTakeMesage(body:any){
-  
-}
-
+  });
+})
+onUnmounted(() => {
+  if (clientStore.SessionData === null) {
+    return;
+  }
+  const leave: SendEvent = new SendEvent(ConnectingMindsEvents.LEAVE_SESSION)
+  leave.addData("Type", "WATCHER")
+  socketStore.SendEvent(leave)
+})
 </script>
 
 <style scoped>
+.item-container {
+
+  padding: 7px;
+  display: flex;
+  cursor: pointer;
+}
+
+.image-container::hover {
+  background-color: lightgray;
+}
+
+.image-container {
+  height: 100px;
+  width: 100px;
+}
+
+.item-image {
+  object-fit: cover;
+  width: 100%;
+}
+
+.select-item-name {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
 
 #GameView {
-display: grid; 
-grid-template-columns: repeat(2, auto);
-grid-gap: 10px;
-margin-bottom: 50px; 
-background-color: transparent;
-padding: 110px;
-margin: 0px;
-}
-
-header, nav, section, footer {
-  margin-bottom: 20px;
-  padding: 20px;
-  box-sizing: border-box;
-  border-radius: 10px; /* Optional: Abgerundete Ecken */
-}
-
-header {
-  text-align: center;
-  padding: 20px;
-}
-
-/* Transparenz für Tasten und Abschnitte */
-header,
-.game-info,
-.game-controls,
-.item-list,
-.position {
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 30px;
-}
-
-
-
-.game-container {
-  max-width: 800px; /* Erweitere die Breite für mehr Raum im galaktischen Design */
-  flex-direction: column;
-  align-items: center;
-  max-width: 600px;
-  width: 100%;
-  background-color: rgba(12, 12, 12, 0.8); /* Transparenter Hintergrund für den Container */
-  backdrop-filter: blur(10px); /* Hinzufügen von Unschärfe für ein futuristisches Gefühl */
-  background-color: transparent;
-  position: relative; /* Positionierung für absolute Elemente innerhalb des Containers */
-  margin-top: -100px;
-}
-
-.game-info {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  border-radius: 10px;
-  margin-top: -20px;
-  display: flex;
-  justify-content: space-around;
-  backdrop-filter: blur(5px); /* Weitere Unschärfe für den Infobereich */
-}
-
-.info-item {
-  margin: 0;
-  font-size: 18px; /* Größere Schrift für Spielinformationen */
-  color: #33aaff; /* Hervorhebung der Textfarbe */
-}
-
-.game-board {
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 20px;
-  border-radius: 15px;
-  
-}
-
-.game-controls {
-display: grid; 
-grid-template-columns: repeat(2, auto);
-grid-gap: 10px;
-margin-top: -20px; 
-background-color: transparent;
-justify-content: center;
-
-}
-
-.game-map {
-  margin-top: -30px; /* Füge einen oberen Abstand zum Bild hinzu */
-  width: 100%; /* Setze die Breite auf 100% */
-  height: auto; /* Automatische Anpassung der Höhe entsprechend der Breite */
+  padding: 2% 10%;
 }
 
 .control-button {
-  
   color: #ffffff;
-  border: none;
-  padding: 0px;
+  padding: 14px 28px;
   border-radius: 5px;
   cursor: pointer;
+  width: 200px;
   transition: background-color 0.3s ease;
-  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
-  background-image: url('@/assets/button_image.png'); /* Ersetze 'pfad/zum/deinem/bild.jpg' durch den Pfad zu deinem Bild */
-  background-size: cover; /* oder contain, je nachdem, wie du das Bild skalieren möchtest */
-  background-position: center; /* Hintergrundposition zentrieren */
-  background-color: transparent; /* Hintergrundfarbe auf transparent setzen */
-  margin-top: -50px;
-}
-
-.button-outside{
-  justify-content: center;
-  align-items: center;
-  padding:20px;
-  background-image:url('@/assets/button_image.png');
-  background-position:center;
+  animation: pulse 5s infinite;
+  background-image: url('@/assets/button_image.png');
   background-size: cover;
-  transition: background-color 0.3s ease;
-  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
-  background-position: center; /* Hintergrundposition zentrieren */
-  cursor: pointer;
-  width: 150px;
- 
-  
-}
-.button-inside{
-  padding: 20px;
-  text-align:center;
-  color:white;
-  transition: background-color 0.3s ease;
-  animation: pulse 5s infinite; /* Pulsierende Animation für die Tasten */
-  background-position: center; /* Hintergrundposition zentrieren */
-  cursor: pointer;
-  width: 150px;
- 
+  background-position: center;
 }
 
 .control-button:hover {
-  background-color: #85ebd9;
+  background-image: url('@/assets/button_image.png');
+  background-size: cover;
+  background-position: center;
 }
 
-.item-list {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 15px;
+.list-part {
+  overflow-y: auto;
+  height: 290px;
+}
+
+.list-item {
+  width: 100%;
+  /* height: 40px; */
+}
+
+.inset {
+  padding: 14px;
+  background-color: transparent;
+  backdrop-filter: blur(10px);
   border-radius: 10px;
-  margin-top: 20px;
 }
 
-.position {
-  align-items: center;
-  padding: 15px;
-  margin-top: 20px;
+.item-name {
+  cursor: pointer;
+  width: 90%;
 }
 
-.item-list,
-.position {
-  align-items: center;
-  padding: 15px;
-  margin-top: 20px;
+.remove-item {
+  width: 10%;
 }
 
-.item-list ul,
-.position ul {
-  align-items: center;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.item-list li,
-.position li {
-  margin-bottom: 15px; /* Mehr Abstand zwischen Listenpunkten */
-  padding: 10px;
-  transition: background-color 0.3s ease;
+.inner-item {
   display: flex;
+  padding: 7px;
+  border: 1px lightgray solid;
+  vertical-align: middle
+}
+
+.action-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.control-button:disabled {
+  filter: grayscale(100%) !important;
+  animation: none;
+  cursor: not-allowed;
+}
+
+.map-part {
+  margin-top: 70px;
+  padding: 28px;
+}
+
+.place {
+  display: flex;
+  justify-content: center;
+  width: 50%;
+}
+
+.discard {
+  display: flex;
+  justify-content: center;
+  width: 50%;
+}
+
+
+.top-part {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
   justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-  color: white;
-  border-radius: 10px;
 }
 
-.item-list li:hover{
-  color: #3d898d;
-  border-radius: 10px;
-}
-.position li:hover {
-  background-color: #3d898d;
+.action-part {
+  padding: 0 14px;
+  width: 50%;
 }
 
-.item-list h2 {
-  margin-bottom: 10px;
+.listing-part {
+  width: 50%;
+  padding: 0 14px;
 }
 
-.item-list ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+.position-select {
+  margin-top: 28px;
 }
 
-.item-list li {
-  margin-bottom: 5px;
-}
+
+
+
+
+
+
 
 @keyframes pulse {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
+  }
+}
+</style>
+<style>
+#GameView {
+  .v-onboarding-item__header-title {
+    color: black;
+  }
+
+  .v-onboarding-item__description {
+    color: black;
   }
 }
 </style>

@@ -8,6 +8,8 @@ import router from './router'
 import { ImportExtensions } from './extensions'
 import { ImportStores } from './stores'
 
+
+
 import "vuetify/styles";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
@@ -26,10 +28,12 @@ const app = createApp(App)
 
 
 
+
 pinia = ImportExtensions(pinia)
 pinia = ImportStores(pinia)
 
 app.use(pinia)
+
 app.use(router)
 app.use(vuetify);
 app.mount('#app')
